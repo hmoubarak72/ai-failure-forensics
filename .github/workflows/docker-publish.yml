@@ -1,0 +1,66 @@
+name: docker-publish
+
+# Builds the production image on the official python:3.11-slim base and publishes it to
+# GitHub Container Registry: ghcr.io/hmoubarak72/ai-failure-forensics
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3        # arm64 build (Apple Silicon, Graviton)
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
+            type=semver,pattern={{version}}
+
+      - name: Build amd64 image for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ff:smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test (API seeds demo, 150 traces)
+        run: |
+          docker run -d --name ff -p 8000:8000 ff:smoke api
+          for i in $(seq 1 40); do curl -sf localhost:8000/health && break; sleep 2; done
+          curl -sf localhost:8000/analytics | python3 -c "import json,sys; a=json.load(sys.stdin); assert a['totals']['traces']==150, a['totals']; print('ok', a['regression_trend'][-1])"
+          docker rm -f ff
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha

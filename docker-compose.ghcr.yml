@@ -1,0 +1,31 @@
+# Run the published image without building anything:
+#   docker compose -f docker-compose.ghcr.yml up -d
+# API: http://localhost:8000/docs   Trace explorer: http://localhost:8501
+services:
+  api:
+    image: ghcr.io/hmoubarak72/ai-failure-forensics:latest
+    command: ["api"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - forensics-data:/app/data
+
+  ui:
+    image: ghcr.io/hmoubarak72/ai-failure-forensics:latest
+    command: ["ui"]
+    environment:
+      PORT: "8501"
+      FORENSICS_API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  forensics-data:

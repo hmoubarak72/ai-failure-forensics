@@ -30,6 +30,21 @@ docker compose up --build
 | Trace explorer (Streamlit) | http://localhost:8501 |
 | REST API + Swagger docs | http://localhost:8000/docs |
 
+**Windows / Docker Desktop, one command** (build, run, health-check, open the UI; `-Export` saves an image `.tar`, `-Publish` pushes the GHCR workflow):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\package.ps1
+```
+
+**Or run the published image (no build):**
+
+```bash
+docker pull ghcr.io/hmoubarak72/ai-failure-forensics:latest
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+The image (`linux/amd64` + `linux/arm64`) is built and smoke-tested by GitHub Actions on every push to `main` ([docker-publish.yml](.github/workflows/docker-publish.yml)). One image serves three roles: `api`, `ui` and `demo`.
+
 On first start, the API seeds the demo scenario automatically: 50 documents × 3 prompt versions, human flags, diagnoses, eval cases and regression runs.
 
 **No API key needed.** Without `OPENAI_API_KEY` the system uses a deterministic mock LLM that sees only the prompt (like a real model) and reproduces real failure modes, so the demo is fully reproducible. Add a key and the same pipeline runs on OpenAI, with LLM-as-judge diagnosis.

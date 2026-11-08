@@ -9,3 +9,5 @@ data
 docs
 tests
 .env
+*.tar
+scripts
