@@ -1,0 +1,30 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+        env:
+          LLM_PROVIDER: mock
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t ai-failure-forensics:ci .
+      - name: smoke test
+        run: |
+          docker run -d --name ff -p 8000:8000 ai-failure-forensics:ci api
+          for i in $(seq 1 30); do curl -sf localhost:8000/health && break; sleep 2; done
+          curl -sf localhost:8000/analytics | python -c "import json,sys; a=json.load(sys.stdin); assert a['totals']['traces']==150, a['totals']; print(a['regression_trend'][-1])"

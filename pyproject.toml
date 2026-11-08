@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-failure-forensics"
+version = "0.1.0"
+description = "Observability, backward root-cause analysis and a feedback-to-eval loop for multi-step AI pipelines"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Hesham Moubarak" }]
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["forensics*"]
+
+[project.scripts]
+forensics = "forensics.cli:main"

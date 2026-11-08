@@ -1,0 +1,29 @@
+services:
+  api:
+    build: .
+    image: ai-failure-forensics:latest
+    command: ["api"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - forensics-data:/app/data
+
+  ui:
+    image: ai-failure-forensics:latest
+    command: ["ui"]
+    environment:
+      PORT: "8501"
+      FORENSICS_API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  forensics-data:
