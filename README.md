@@ -108,6 +108,10 @@ Regression trend (known issues resolved):  v1 0/12 → v2 5/12 (42%) → v3 9/12
 | `FORENSICS_SEED_DEMO` | `1` | seed the demo on an empty data volume |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | – | export spans to an OTLP collector |
 
+## Use it as a Claude skill
+
+[`SKILL.md`](SKILL.md) teaches Claude (Cowork, Claude Code, claude.ai) to run, query and extend this project: flag traces, read diagnoses, run regressions, report analytics. Save it as a skill and ask things like *"why did doc-050 go wrong?"* or *"how many known issues does v3 resolve?"*.
+
 See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for diagrams of the tracing layer, the backward analysis flow and the feedback loop.
 
 ## Recording the demo (Loom script)
